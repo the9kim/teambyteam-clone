@@ -30,4 +30,9 @@ class Hello {
     int age() {
         return 36;
     }
+
+    @RequestMapping("/add")
+    String address() {
+        return "changwon";
+    }
 }
