@@ -26,6 +26,11 @@ class Hello {
         return "roy";
     }
 
+    @RequestMapping("name/full")
+    String fullName() {
+        return "roy kim";
+    }
+
     @RequestMapping("/age")
     int age() {
         return 36;
