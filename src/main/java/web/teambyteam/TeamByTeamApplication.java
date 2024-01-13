@@ -25,4 +25,9 @@ class Hello {
     String name() {
         return "roy";
     }
+
+    @RequestMapping("/age")
+    int age() {
+        return 36;
+    }
 }
