@@ -34,4 +34,9 @@ class Hello {
     String phone() {
         return "010-1234-5678";
     }
+
+    @RequestMapping("/job")
+    String job() {
+        return "programmer";
+    }
 }
