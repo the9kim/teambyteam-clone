@@ -67,4 +67,4 @@ jobs:
         run: |
           echo "$DEV_DEPLOY_SCRIPT" > dev-deploy.sh
           chmod 700 dev-deploy.sh
-          sudo ./dev-dploy.sh
+          sudo ./dev-deploy.sh
