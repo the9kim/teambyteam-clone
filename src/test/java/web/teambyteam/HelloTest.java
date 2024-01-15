@@ -16,7 +16,8 @@ class HelloTest {
 
     @Test
     void age() {
-        Assertions.assertThat(1).isEqualTo(1);
+        Hello hello = new Hello();
+        Assertions.assertThat(hello.age()).isEqualTo(36);
     }
 
     @Test
