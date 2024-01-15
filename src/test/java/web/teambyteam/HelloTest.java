@@ -12,4 +12,9 @@ class HelloTest {
 
         Assertions.assertThat("hello").isEqualTo("hello");
     }
+
+    @Test
+    void age() {
+        Assertions.assertThat(1).isEqualTo(1);
+    }
 }
