@@ -3,6 +3,7 @@ package web.teambyteam;
 import io.restassured.internal.common.assertion.Assertion;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,5 +38,11 @@ class HelloTest {
         Hello hello = new Hello();
         Assertions.assertThat(hello.fullName()).isEqualTo("roy kim");
     }
+
+    @RequestMapping("job")
+    String job() {
+        return "programming";
+    }
+
 
 }
