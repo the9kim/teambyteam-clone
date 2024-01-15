@@ -23,4 +23,10 @@ class HelloTest {
     void phone() {
         Assertions.assertThat(010).isEqualTo(010);
     }
+
+    @Test
+    void address() {
+        Hello hello = new Hello();
+        Assertions.assertThat(hello.address()).isEqualTo("masan");
+    }
 }
