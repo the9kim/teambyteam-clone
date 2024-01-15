@@ -63,4 +63,8 @@ jobs:
           path: ~/team-by-team-clone/build/libs
 
       - name: Deploy to Was
-        run: nohup java -jar ~/team-by-team-clone/build/libs/$(ls -t ~/team-by-team-clone/build/libs | grep jar | head -n 1) 2>&1 &
+        working-directory: /home/ubuntu/
+        run: |
+          echo "$DEV_DEPLOY_SCRIPT" > dev-deploy.sh
+          chmod 700 dev-deploy.sh
+          sudo ./dev-dploy.sh
