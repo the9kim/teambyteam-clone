@@ -30,4 +30,10 @@ class HelloTest {
         Assertions.assertThat(hello.address()).isEqualTo("changwon");
     }
 
+    @Test
+    void fullName() {
+        Hello hello = new Hello();
+        Assertions.assertThat(hello.fullName()).isEqualTo("roy kim");
+    }
+
 }
