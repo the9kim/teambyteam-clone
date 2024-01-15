@@ -1,5 +1,6 @@
 package web.teambyteam;
 
+import io.restassured.internal.common.assertion.Assertion;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -16,5 +17,10 @@ class HelloTest {
     @Test
     void age() {
         Assertions.assertThat(1).isEqualTo(1);
+    }
+
+    @Test
+    void phone() {
+        Assertions.assertThat(010).isEqualTo(010);
     }
 }
