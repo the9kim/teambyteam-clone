@@ -38,11 +38,4 @@ class HelloTest {
         Hello hello = new Hello();
         Assertions.assertThat(hello.fullName()).isEqualTo("roy kim");
     }
-
-    @RequestMapping("job")
-    String job() {
-        return "programming";
-    }
-
-
 }
