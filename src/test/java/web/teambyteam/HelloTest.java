@@ -10,8 +10,8 @@ class HelloTest {
 
     @Test
     void name() {
-
-        Assertions.assertThat("hello").isEqualTo("hello");
+        Hello hello = new Hello();
+        Assertions.assertThat(hello.name()).isEqualTo("roy");
     }
 
     @Test
