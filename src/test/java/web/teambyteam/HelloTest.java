@@ -27,7 +27,7 @@ class HelloTest {
     @Test
     void address() {
         Hello hello = new Hello();
-        Assertions.assertThat(hello.address()).isEqualTo("masan");
+        Assertions.assertThat(hello.address()).isEqualTo("changwon");
     }
 
 }
