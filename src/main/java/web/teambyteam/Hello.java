@@ -30,4 +30,8 @@ class Hello {
         return "changwon";
     }
 
+    @RequestMapping("/phone")
+    String phone() {
+        return "010-1234-5678";
+    }
 }
