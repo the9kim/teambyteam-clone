@@ -52,6 +52,7 @@ jobs:
     runs-on: self-hosted
     env:
       DEV_DEPLOY_SCRIPT: ${{ secrets.DEV_BACK_DEPLOY_SCRIPT }}
+      DEV_PROPERTY: ${{ secrets.DEV_PROPERTY }}
     steps:
       - name: Remove previous version jar
         run: rm -f ~/team-by-team-clone/build/libs/team-by-team-clone*.jar
@@ -61,6 +62,10 @@ jobs:
         with:
           name: BackendApplicationJar
           path: ~/team-by-team-clone/build/libs
+
+      - name: Set dev application.yml
+        run: |
+          echo "$DEV_PROPERTY" > ~/team-by-team-clone/src/main/resources/application-dev.yml
 
       - name: Deploy to Was
         working-directory: /home/ubuntu/
