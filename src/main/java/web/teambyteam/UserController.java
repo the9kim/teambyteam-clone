@@ -51,4 +51,16 @@ public class UserController {
 
         return user.getName() + " delete!";
     }
+
+    @PostMapping("/update")
+    public String update(@RequestParam String name,
+                         @RequestParam String newName) {
+        MyUser user = userRepository.findByName(name);
+
+        user.setName(newName);
+
+        userRepository.flush();
+
+        return user.getName() + "updated!";
+    }
 }
