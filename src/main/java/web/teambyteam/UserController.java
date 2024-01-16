@@ -2,7 +2,9 @@ package web.teambyteam;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,4 +43,12 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @PostMapping("/delete")
+    public String getEmail(@RequestParam String name) {
+        MyUser user = userRepository.findByName(name);
+
+        userRepository.delete(user);
+
+        return user.getName() + " delete!";
+    }
 }
