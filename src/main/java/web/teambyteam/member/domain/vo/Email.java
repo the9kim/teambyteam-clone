@@ -1,5 +1,6 @@
 package web.teambyteam.member.domain.vo;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -17,6 +18,7 @@ public class Email {
 
     private static final String EMAIL_FORMAT = "^[\\w.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,8}$";
 
+    @Column(name = "email", nullable = false, unique = true)
     private String value;
 
     public Email(String value) {
