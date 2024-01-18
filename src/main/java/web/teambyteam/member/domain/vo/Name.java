@@ -24,7 +24,7 @@ public class Name {
         }
     }
 
-    public void validate(String value) {
+    private void validate(String value) {
         if (value.length() > MAX_LENGTH) {
             throw new MemberException.NameLengthException(MAX_LENGTH, value);
         }
