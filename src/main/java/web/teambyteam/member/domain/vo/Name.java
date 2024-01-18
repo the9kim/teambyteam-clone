@@ -1,15 +1,24 @@
 package web.teambyteam.member.domain.vo;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import web.teambyteam.member.exception.MemberException;
 
 import java.util.Objects;
 
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
 @Getter
 public class Name {
 
     public static final int MAX_LENGTH = 20;
-    private final String value;
+    @Column(name = "name", nullable = false, length = MAX_LENGTH)
+    private String value;
 
     public Name(String value) {
         validateNull(value);
@@ -32,3 +41,4 @@ public class Name {
 
 
 }
+
