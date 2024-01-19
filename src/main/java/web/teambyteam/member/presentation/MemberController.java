@@ -10,6 +10,8 @@ import web.teambyteam.member.application.MemberService;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/me")
 @RequiredArgsConstructor
@@ -19,10 +21,12 @@ public class MemberController {
 
 
     @PostMapping
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<Void> signUp(@RequestBody SignUpRequest request) {
 
         SignUpResponse response = memberService.signUp(request);
 
-        return ResponseEntity.ok(response);
+        URI location = URI.create("/api/me/" + response.memberId());
+
+        return ResponseEntity.created(location).build();
     }
 }
