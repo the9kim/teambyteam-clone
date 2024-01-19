@@ -1,18 +1,22 @@
 package web.teambyteam.member.application;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.exception.MemberException;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class MemberService {
 
+    @Autowired
     private final MemberRepository memberRepository;
 
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
@@ -23,4 +27,15 @@ public class MemberService {
 
         return new SignUpResponse(savedMember.getId());
     }
+
+    public MyInfoResponse getMyInfo(Long memberId) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+
+        MyInfoResponse response = MyInfoResponse.of(member);
+
+        return response;
+    }
+
 }

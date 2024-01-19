@@ -2,13 +2,18 @@ package web.teambyteam.member.presentation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import web.teambyteam.member.application.MemberService;
+import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/me")
@@ -19,10 +24,22 @@ public class MemberController {
 
 
     @PostMapping
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<Void> signUp(@RequestBody SignUpRequest request) {
 
         SignUpResponse response = memberService.signUp(request);
 
+        URI location = URI.create("/api/me/" + response.memberId());
+
+        return ResponseEntity.created(location).build();
+    }
+
+
+    @GetMapping("/{memberId}")
+    public ResponseEntity<MyInfoResponse> getMyInfo(@PathVariable Long memberId) {
+
+        MyInfoResponse response = memberService.getMyInfo(memberId);
+
         return ResponseEntity.ok(response);
     }
+
 }
