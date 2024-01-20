@@ -72,7 +72,7 @@ class MemberControllerTest {
         // when
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
-                        .get("/api/me/" + savedMember.getId())
+                        .get("/api/me/{memberId}", savedMember.getId())
                         .then().log().all()
                         .extract();
 
@@ -96,7 +96,7 @@ class MemberControllerTest {
         ExtractableResponse<Response> response = RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(request)
-                .patch("/api/me/" + savedMember.getId())
+                .patch("/api/me/{memberId}", savedMember.getId())
                 .then().log().all()
                 .extract();
 
