@@ -99,4 +99,21 @@ class MemberServiceTest {
         });
     }
 
+    @Test
+    void deleteMember() {
+
+        // given
+        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+
+        // when
+        memberService.cancelMembership(savedMember.getId());
+
+        // then
+
+        Assertions.assertThatThrownBy(
+                () -> memberRepository.findById(savedMember.getId())
+                        .orElseThrow(() -> new MemberException.NotFoundException(savedMember.getId()))
+        ).isInstanceOf(MemberException.NotFoundException.class);
+    }
+
 }

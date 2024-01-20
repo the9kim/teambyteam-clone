@@ -49,4 +49,7 @@ public class MemberService {
         member.updateName(request.name());
     }
 
+    public void cancelMembership(Long memberId) {
+        memberRepository.deleteById(memberId);
+    }
 }

@@ -104,4 +104,23 @@ class MemberControllerTest {
         Assertions.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     }
 
+    @Test
+    void deleteMember() {
+        // given
+        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+
+        // when
+        ExtractableResponse<Response> response =
+                RestAssured.given().log().all()
+                .delete("/api/me/{memberId}", savedMember.getId())
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        });
+
+    }
+
 }
