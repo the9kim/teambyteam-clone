@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.member.application.dto.MyInfoResponse;
+import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
@@ -35,9 +36,16 @@ class MemberServiceTest {
         // when
         SignUpResponse response = memberService.signUp(request);
 
-        // then
-        Assertions.assertThat(response.memberId()).isEqualTo(1L);
+        Member savedMember = memberRepository.findById(response.memberId())
+                .orElseThrow(() -> new MemberException.NotFoundException(response.memberId()));
 
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(savedMember.getName().getValue()).isEqualTo("roy");
+            softly.assertThat(savedMember.getEmail().getValue()).isEqualTo("roy@gmail.com");
+            softly.assertThat(savedMember.getProfileImageUrl().getValue()).isEqualTo("image");
+        });
     }
 
     /**
@@ -72,6 +80,23 @@ class MemberServiceTest {
         Assertions.assertThatThrownBy(() ->
                         memberService.getMyInfo(nonExistMemberId))
                 .isInstanceOf(MemberException.NotFoundException.class);
+    }
+
+    @Test
+    void updateMyInfo() {
+        // given
+        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
+
+        // when
+        memberService.updateMyInfo(savedMember.getId(), request);
+
+        MyInfoResponse myInfo = memberService.getMyInfo(savedMember.getId());
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(myInfo.name()).isEqualTo("koy");
+        });
     }
 
 }

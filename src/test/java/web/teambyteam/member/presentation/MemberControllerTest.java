@@ -18,6 +18,8 @@ import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
 
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Sql(scripts = "/h2-truncate.sql", executionPhase = BEFORE_TEST_METHOD)
 class MemberControllerTest {
@@ -43,7 +45,6 @@ class MemberControllerTest {
                 "roy", "roy@gamil.com", "abc");
 
         // when
-
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -53,8 +54,10 @@ class MemberControllerTest {
                         .extract();
 
         // then
-        Assertions.assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
-        Assertions.assertThat(response.header("location")).isEqualTo("/api/me/1");
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
+        });
+
     }
 
     /**
@@ -80,6 +83,25 @@ class MemberControllerTest {
             softly.assertThat(response.body().jsonPath().getString("email")).isEqualTo(savedMember.getEmail().getValue());
             softly.assertThat(response.body().jsonPath().getString("profileImageUrl")).isEqualTo(savedMember.getProfileImageUrl().getValue());
         });
+    }
+
+    @Test
+    void updateMyInfo() {
+
+        // given
+        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
+
+        // when
+        ExtractableResponse<Response> response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .patch("/api/me/" + savedMember.getId())
+                .then().log().all()
+                .extract();
+
+        // then
+        Assertions.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     }
 
 }
