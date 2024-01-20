@@ -50,4 +50,9 @@ public class Member {
         this(new Name(name), new Email(email), new ProfileImageUrl(profileImageUrl));
 
     }
+
+    public void updateName(String name) {
+        this.name.changeName(name);
+    }
+    // Do I need to make getNameValue() to follow Demeter's law
 }

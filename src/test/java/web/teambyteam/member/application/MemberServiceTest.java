@@ -5,8 +5,12 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import web.teambyteam.fixtures.FixtureBuilder;
+import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.member.application.dto.MyInfoResponse;
+import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
@@ -16,6 +20,7 @@ import web.teambyteam.member.exception.MemberException;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Transactional
+@Sql("/h2-truncate.sql")
 class MemberServiceTest {
 
     @Autowired
@@ -23,6 +28,9 @@ class MemberServiceTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private FixtureBuilder fixtureBuilder;
 
     @Test
     void signUp() {
@@ -33,9 +41,16 @@ class MemberServiceTest {
         // when
         SignUpResponse response = memberService.signUp(request);
 
-        // then
-        Assertions.assertThat(response.memberId()).isEqualTo(1L);
+        Member savedMember = memberRepository.findById(response.memberId())
+                .orElseThrow(() -> new MemberException.NotFoundException(response.memberId()));
 
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(savedMember.getName().getValue()).isEqualTo("roy");
+            softly.assertThat(savedMember.getEmail().getValue()).isEqualTo("roy@gmail.com");
+            softly.assertThat(savedMember.getProfileImageUrl().getValue()).isEqualTo("image");
+        });
     }
 
     /**
@@ -44,16 +59,16 @@ class MemberServiceTest {
     @Test
     void getMyInfo() {
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
 
         // when
         MyInfoResponse response = memberService.getMyInfo(savedMember.getId());
 
         // then
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(response.name()).isEqualTo("roy");
-            softly.assertThat(response.email()).isEqualTo("roy@gmail.com");
-            softly.assertThat(response.profileImageUrl()).isEqualTo("image");
+            softly.assertThat(response.name()).isEqualTo(savedMember.getName().getValue());
+            softly.assertThat(response.email()).isEqualTo(savedMember.getEmail().getValue());
+            softly.assertThat(response.profileImageUrl()).isEqualTo(savedMember.getProfileImageUrl().getValue());
         });
     }
 
@@ -70,6 +85,40 @@ class MemberServiceTest {
         Assertions.assertThatThrownBy(() ->
                         memberService.getMyInfo(nonExistMemberId))
                 .isInstanceOf(MemberException.NotFoundException.class);
+    }
+
+    @Test
+    void updateMyInfo() {
+        // given
+        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
+
+        // when
+        memberService.updateMyInfo(savedMember.getId(), request);
+
+        MyInfoResponse myInfo = memberService.getMyInfo(savedMember.getId());
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(myInfo.name()).isEqualTo("koy");
+        });
+    }
+
+    @Test
+    void deleteMember() {
+
+        // given
+        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+
+        // when
+        memberService.cancelMembership(savedMember.getId());
+
+        // then
+
+        Assertions.assertThatThrownBy(
+                () -> memberRepository.findById(savedMember.getId())
+                        .orElseThrow(() -> new MemberException.NotFoundException(savedMember.getId()))
+        ).isInstanceOf(MemberException.NotFoundException.class);
     }
 
 }

@@ -39,6 +39,9 @@ public class Name {
         }
     }
 
+    public void changeName(String name) {
+        this.value = name;
+    }
 
 }
 

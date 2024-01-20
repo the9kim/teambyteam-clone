@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.member.application.dto.MyInfoResponse;
+import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
@@ -38,4 +39,17 @@ public class MemberService {
         return response;
     }
 
+    /**
+     * Why isn't the update query being sent when I call this method?
+     */
+    public void updateMyInfo(Long memberId, MyInfoUpdateRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+
+        member.updateName(request.name());
+    }
+
+    public void cancelMembership(Long memberId) {
+        memberRepository.deleteById(memberId);
+    }
 }
