@@ -13,6 +13,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
+import web.teambyteam.fixtures.FixtureBuilder;
+import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
@@ -29,6 +31,9 @@ class MemberControllerTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    FixtureBuilder fixturebuilder;
 
     @LocalServerPort
     int port;
@@ -67,7 +72,7 @@ class MemberControllerTest {
     void getMyInfo() {
 
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
@@ -89,7 +94,7 @@ class MemberControllerTest {
     void updateMyInfo() {
 
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
@@ -107,7 +112,7 @@ class MemberControllerTest {
     @Test
     void deleteMember() {
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
@@ -120,7 +125,6 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
         });
-
     }
 
 }

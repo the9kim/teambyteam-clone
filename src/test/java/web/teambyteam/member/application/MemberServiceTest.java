@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import web.teambyteam.fixtures.FixtureBuilder;
+import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
@@ -26,6 +28,9 @@ class MemberServiceTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private FixtureBuilder fixtureBuilder;
 
     @Test
     void signUp() {
@@ -54,16 +59,16 @@ class MemberServiceTest {
     @Test
     void getMyInfo() {
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
 
         // when
         MyInfoResponse response = memberService.getMyInfo(savedMember.getId());
 
         // then
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(response.name()).isEqualTo("roy");
-            softly.assertThat(response.email()).isEqualTo("roy@gmail.com");
-            softly.assertThat(response.profileImageUrl()).isEqualTo("image");
+            softly.assertThat(response.name()).isEqualTo(savedMember.getName().getValue());
+            softly.assertThat(response.email()).isEqualTo(savedMember.getEmail().getValue());
+            softly.assertThat(response.profileImageUrl()).isEqualTo(savedMember.getProfileImageUrl().getValue());
         });
     }
 
@@ -85,7 +90,7 @@ class MemberServiceTest {
     @Test
     void updateMyInfo() {
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
