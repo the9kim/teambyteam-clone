@@ -24,4 +24,7 @@ public class TeamPlace {
     @Embedded
     private Name name;
 
+    public TeamPlace(Name name) {
+        this.name = name;
+    }
 }
