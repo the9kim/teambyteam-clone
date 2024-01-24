@@ -1,6 +1,6 @@
 package web.teambyteam.teamplace.application;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.teamplace.domain.TeamPlace;
@@ -10,7 +10,7 @@ import web.teambyteam.teamplace.dto.TeamCreationRequest;
 
 @Service
 @Transactional
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TeamPlaceService {
 
     private final TeamPlaceRepository teamPlaceRepository;
