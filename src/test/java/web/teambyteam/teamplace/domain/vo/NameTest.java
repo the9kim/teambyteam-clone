@@ -3,7 +3,7 @@ package web.teambyteam.teamplace.domain.vo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import web.teambyteam.teamplace.domain.exception.TeamPlaceException;
+import web.teambyteam.teamplace.exception.TeamPlaceException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

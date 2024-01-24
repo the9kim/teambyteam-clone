@@ -5,7 +5,7 @@ import jakarta.persistence.Embeddable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import web.teambyteam.teamplace.domain.exception.TeamPlaceException;
+import web.teambyteam.teamplace.exception.TeamPlaceException;
 
 import java.util.Objects;
 

@@ -1,4 +1,4 @@
-package web.teambyteam.teamplace.domain.exception;
+package web.teambyteam.teamplace.exception;
 
 public class TeamPlaceException extends RuntimeException {
 
