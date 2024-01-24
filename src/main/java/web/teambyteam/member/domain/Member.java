@@ -24,6 +24,7 @@ public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
     private Long id;
 
     @Embedded
@@ -35,15 +36,14 @@ public class Member {
     @Embedded
     private ProfileImageUrl profileImageUrl;
 
-    @Column
-    @OneToMany
-    private List<MemberTeamPlace> memberTeamPlace;
+    @OneToMany(mappedBy = "member")
+    private List<MemberTeamPlace> memberTeamPlaces;
 
     public Member(Name name, Email email, ProfileImageUrl profileImageUrl) {
         this.name = name;
         this.email = email;
         this.profileImageUrl = profileImageUrl;
-        this.memberTeamPlace = new ArrayList<>();
+        this.memberTeamPlaces = new ArrayList<>();
     }
 
     public Member(String name, String email, String profileImageUrl) {
