@@ -27,4 +27,8 @@ public class TeamPlace {
     public TeamPlace(Name name) {
         this.name = name;
     }
+
+    public TeamPlace(String name) {
+        this(new Name(name));
+    }
 }

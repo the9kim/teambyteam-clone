@@ -16,4 +16,13 @@ public class TeamPlaceException extends RuntimeException {
         }
     }
 
+    public static class NotFoundException extends TeamPlaceException {
+        public NotFoundException(Long teamPlaceId) {
+            super(String.format(
+                    "존재하지 않는 팀플레이스 입니다. - request info { team_place_id : %d }", teamPlaceId
+            ));
+        }
+
+    }
+
 }
