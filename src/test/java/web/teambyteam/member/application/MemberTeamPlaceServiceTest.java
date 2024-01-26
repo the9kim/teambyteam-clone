@@ -1,5 +1,6 @@
 package web.teambyteam.member.application;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
+import web.teambyteam.member.application.dto.LeavingTeamRequest;
 import web.teambyteam.member.application.dto.ParticipateRequest;
 import web.teambyteam.member.domain.Member;
-import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.member.domain.MemberTeamPlace;
 import web.teambyteam.member.domain.MemberTeamPlaceRepository;
+import web.teambyteam.member.exception.MemberTeamPlaceException;
 import web.teambyteam.teamplace.domain.TeamPlace;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -45,6 +47,24 @@ class MemberTeamPlaceServiceTest {
         // then
         SoftAssertions.assertSoftly(softly ->
                 softly.assertThat(member.getMemberTeamPlaces()).contains(memberTeamPlace));
+    }
+
+    @Test
+    void leaveTeamPlace() {
+        // given
+        MemberTeamPlace memberTeamPlace = builder.buildMemberTeamPlace(MemberFixtures.member1(), TeamPlaceFixtures.teamPlace1());
+        LeavingTeamRequest request = new LeavingTeamRequest(memberTeamPlace.getMember().getId(), memberTeamPlace.getTeamPlace().getId());
+
+        // when
+        memberTeamPlaceService.leaveTeam(request);
+
+        System.out.println(memberTeamPlace.getId());
+
+        // then
+        Assertions.assertThatThrownBy(
+                () -> memberTeamPlaceRepository.findById(memberTeamPlace.getId())
+                        .orElseThrow(() -> new MemberTeamPlaceException.NotFoundException())
+        ).isInstanceOf(MemberTeamPlaceException.NotFoundException.class);
     }
 
 }
