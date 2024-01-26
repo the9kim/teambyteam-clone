@@ -15,10 +15,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
+import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
+import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
+import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.domain.MemberTeamPlace;
+
+import java.util.List;
 
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
@@ -33,7 +39,7 @@ class MemberControllerTest {
     MemberRepository memberRepository;
 
     @Autowired
-    FixtureBuilder fixturebuilder;
+    FixtureBuilder builder;
 
     @LocalServerPort
     int port;
@@ -72,7 +78,7 @@ class MemberControllerTest {
     void getMyInfo() {
 
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
@@ -94,7 +100,7 @@ class MemberControllerTest {
     void updateMyInfo() {
 
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
@@ -112,7 +118,7 @@ class MemberControllerTest {
     @Test
     void deleteMember() {
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
@@ -127,4 +133,36 @@ class MemberControllerTest {
         });
     }
 
+    @Test
+    void findAllTeamPlaces() {
+        // given
+        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(
+                MemberFixtures.member1(),
+                TeamPlaceFixtures.teamPlace1());
+
+        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(
+                memberTeamPlace1.getMember(),
+                TeamPlaceFixtures.teamPlace2());
+
+        Member member = memberTeamPlace2.getMember();
+
+        ParticipatingTeamsResponse expected = new ParticipatingTeamsResponse(List.of(
+                new ParticipatingTeamResponse(memberTeamPlace1.getTeamPlace().getId(), memberTeamPlace1.getTeamPlace().getName()),
+                new ParticipatingTeamResponse(memberTeamPlace2.getTeamPlace().getId(), memberTeamPlace2.getTeamPlace().getName())));
+
+
+        // when
+        ExtractableResponse response =
+                RestAssured.given().log().all()
+                .get("/api/me/team-places/{memberId}", member.getId())
+                .then().log().all()
+                .extract();
+
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            softly.assertThat(response.body().jsonPath().getList("teamPlaces.teamPlaceName.value")).contains("teambyteam", "royTeam");
+        });
+    }
 }

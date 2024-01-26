@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import web.teambyteam.member.application.MemberService;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
+import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 
@@ -62,4 +63,9 @@ public class MemberController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/team-places/{memberId}")
+    public ResponseEntity<ParticipatingTeamsResponse> findTeamPlaces(@PathVariable Long memberId) {
+        ParticipatingTeamsResponse response = memberService.findParticipatingTeams(memberId);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -9,14 +9,19 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
+import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
+import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
+import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.domain.MemberTeamPlace;
 import web.teambyteam.member.exception.MemberException;
 
+import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Transactional
@@ -30,7 +35,7 @@ class MemberServiceTest {
     private MemberRepository memberRepository;
 
     @Autowired
-    private FixtureBuilder fixtureBuilder;
+    private FixtureBuilder builder;
 
     @Test
     void signUp() {
@@ -59,7 +64,7 @@ class MemberServiceTest {
     @Test
     void getMyInfo() {
         // given
-        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
         MyInfoResponse response = memberService.getMyInfo(savedMember.getId());
@@ -90,7 +95,7 @@ class MemberServiceTest {
     @Test
     void updateMyInfo() {
         // given
-        Member savedMember = fixtureBuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
@@ -119,6 +124,25 @@ class MemberServiceTest {
                 () -> memberRepository.findById(savedMember.getId())
                         .orElseThrow(() -> new MemberException.NotFoundException(savedMember.getId()))
         ).isInstanceOf(MemberException.NotFoundException.class);
+    }
+
+    @Test
+    void findParticipatingTeams() {
+        // given
+        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(MemberFixtures.member1(), TeamPlaceFixtures.teamPlace1());
+        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(memberTeamPlace1.getMember(), TeamPlaceFixtures.teamPlace2());
+
+        ParticipatingTeamsResponse expected = new ParticipatingTeamsResponse(List.of(
+                new ParticipatingTeamResponse(memberTeamPlace1.getTeamPlace().getId(), memberTeamPlace1.getTeamPlace().getName()),
+                new ParticipatingTeamResponse(memberTeamPlace2.getTeamPlace().getId(), memberTeamPlace2.getTeamPlace().getName())));
+
+        // when
+        ParticipatingTeamsResponse response = memberService.findParticipatingTeams(memberTeamPlace2.getMember().getId());
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response).usingRecursiveComparison().isEqualTo(expected);
+        });
     }
 
 }

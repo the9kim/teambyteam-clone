@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
+import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
@@ -51,5 +52,12 @@ public class MemberService {
 
     public void cancelMembership(Long memberId) {
         memberRepository.deleteById(memberId);
+    }
+
+    public ParticipatingTeamsResponse findParticipatingTeams(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+
+        return ParticipatingTeamsResponse.of(member.getMemberTeamPlaces());
     }
 }
