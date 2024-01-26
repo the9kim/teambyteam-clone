@@ -54,5 +54,13 @@ public class Member {
     public void updateName(String name) {
         this.name.changeName(name);
     }
+
+    public void participateTeamPlace(MemberTeamPlace memberTeamPlace) {
+        this.memberTeamPlaces.add(memberTeamPlace);
+    }
+
+    public void leaveTeamPlace(MemberTeamPlace memberTeamPlace) {
+        memberTeamPlaces.remove(memberTeamPlace);
+    }
     // Do I need to make getNameValue() to follow Demeter's law
 }
