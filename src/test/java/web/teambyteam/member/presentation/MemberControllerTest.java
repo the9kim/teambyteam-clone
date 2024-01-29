@@ -17,14 +17,11 @@ import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
-import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
-import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.member.domain.MemberTeamPlace;
-
-import java.util.List;
+import web.teambyteam.teamplace.domain.TeamPlace;
 
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
@@ -123,9 +120,9 @@ class MemberControllerTest {
         // when
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
-                .delete("/api/me/{memberId}", savedMember.getId())
-                .then().log().all()
-                .extract();
+                        .delete("/api/me/{memberId}", savedMember.getId())
+                        .then().log().all()
+                        .extract();
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -136,27 +133,20 @@ class MemberControllerTest {
     @Test
     void findAllTeamPlaces() {
         // given
-        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(
-                MemberFixtures.member1(),
-                TeamPlaceFixtures.teamPlace1());
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace1 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        TeamPlace teamPlace2 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace2());
 
-        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(
-                memberTeamPlace1.getMember(),
-                TeamPlaceFixtures.teamPlace2());
-
-        Member member = memberTeamPlace2.getMember();
-
-        ParticipatingTeamsResponse expected = new ParticipatingTeamsResponse(List.of(
-                new ParticipatingTeamResponse(memberTeamPlace1.getTeamPlace().getId(), memberTeamPlace1.getTeamPlace().getName()),
-                new ParticipatingTeamResponse(memberTeamPlace2.getTeamPlace().getId(), memberTeamPlace2.getTeamPlace().getName())));
+        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(member, teamPlace1);
+        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(member, teamPlace2);
 
 
         // when
         ExtractableResponse response =
                 RestAssured.given().log().all()
-                .get("/api/me/team-places/{memberId}", member.getId())
-                .then().log().all()
-                .extract();
+                        .get("/api/me/team-places/{memberId}", member.getId())
+                        .then().log().all()
+                        .extract();
 
 
         // then

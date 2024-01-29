@@ -20,6 +20,7 @@ import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.member.domain.MemberTeamPlace;
 import web.teambyteam.member.exception.MemberException;
+import web.teambyteam.teamplace.domain.TeamPlace;
 
 import java.util.List;
 
@@ -129,8 +130,12 @@ class MemberServiceTest {
     @Test
     void findParticipatingTeams() {
         // given
-        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(MemberFixtures.member1(), TeamPlaceFixtures.teamPlace1());
-        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(memberTeamPlace1.getMember(), TeamPlaceFixtures.teamPlace2());
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace1 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        TeamPlace teamPlace2 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace2());
+
+        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(member, teamPlace1);
+        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(member, teamPlace2);
 
         ParticipatingTeamsResponse expected = new ParticipatingTeamsResponse(List.of(
                 new ParticipatingTeamResponse(memberTeamPlace1.getTeamPlace().getId(), memberTeamPlace1.getTeamPlace().getName()),

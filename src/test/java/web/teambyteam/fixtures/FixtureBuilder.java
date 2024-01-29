@@ -31,10 +31,8 @@ public class FixtureBuilder {
     }
 
     public MemberTeamPlace buildMemberTeamPlace(Member member, TeamPlace teamPlace) {
-        Member savedMember = buildMember(member);
-        TeamPlace savedTeamPlace = buildTeamPlace(teamPlace);
-        MemberTeamPlace memberTeamPlace = new MemberTeamPlace(savedMember, savedTeamPlace);
-        savedMember.participateTeam(memberTeamPlace);
+        MemberTeamPlace memberTeamPlace = new MemberTeamPlace(member, teamPlace);
+        member.participateTeam(memberTeamPlace);
         return memberTeamPlaceRepository.save(memberTeamPlace);
     }
 

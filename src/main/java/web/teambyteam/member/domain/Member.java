@@ -3,7 +3,6 @@ package web.teambyteam.member.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,7 +36,7 @@ public class Member {
     @Embedded
     private ProfileImageUrl profileImageUrl;
 
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member")
     private List<MemberTeamPlace> memberTeamPlaces;
 
     public Member(Name name, Email email, ProfileImageUrl profileImageUrl) {
