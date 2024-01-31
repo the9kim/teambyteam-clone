@@ -15,10 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
+import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.domain.MemberTeamPlace;
+import web.teambyteam.teamplace.domain.TeamPlace;
 
 import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
@@ -33,7 +36,7 @@ class MemberControllerTest {
     MemberRepository memberRepository;
 
     @Autowired
-    FixtureBuilder fixturebuilder;
+    FixtureBuilder builder;
 
     @LocalServerPort
     int port;
@@ -72,7 +75,7 @@ class MemberControllerTest {
     void getMyInfo() {
 
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
@@ -94,7 +97,7 @@ class MemberControllerTest {
     void updateMyInfo() {
 
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
@@ -112,14 +115,14 @@ class MemberControllerTest {
     @Test
     void deleteMember() {
         // given
-        Member savedMember = fixturebuilder.buildMember(MemberFixtures.member1());
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
-                .delete("/api/me/{memberId}", savedMember.getId())
-                .then().log().all()
-                .extract();
+                        .delete("/api/me/{memberId}", savedMember.getId())
+                        .then().log().all()
+                        .extract();
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -127,4 +130,29 @@ class MemberControllerTest {
         });
     }
 
+    @Test
+    void findAllTeamPlaces() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace1 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        TeamPlace teamPlace2 = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace2());
+
+        MemberTeamPlace memberTeamPlace1 = builder.buildMemberTeamPlace(member, teamPlace1);
+        MemberTeamPlace memberTeamPlace2 = builder.buildMemberTeamPlace(member, teamPlace2);
+
+
+        // when
+        ExtractableResponse response =
+                RestAssured.given().log().all()
+                        .get("/api/me/team-places/{memberId}", member.getId())
+                        .then().log().all()
+                        .extract();
+
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+            softly.assertThat(response.body().jsonPath().getList("teamPlaces.teamPlaceName.value")).contains("teambyteam", "royTeam");
+        });
+    }
 }

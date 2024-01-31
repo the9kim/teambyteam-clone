@@ -59,7 +59,9 @@ class MemberTeamPlaceControllerTest {
     @Test
     void leaveTeamPlace() {
         // given
-        MemberTeamPlace memberTeamPlace = builder.buildMemberTeamPlace(MemberFixtures.member1(), TeamPlaceFixtures.teamPlace1());
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        MemberTeamPlace memberTeamPlace = builder.buildMemberTeamPlace(member, teamPlace);
         LeavingTeamRequest request = new LeavingTeamRequest(memberTeamPlace.getMember().getId(), memberTeamPlace.getTeamPlace().getId());
 
         // when

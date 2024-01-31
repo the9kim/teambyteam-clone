@@ -40,7 +40,7 @@ public class MemberTeamPlaceService {
 
         MemberTeamPlace savedMemberTeamPlace = memberTeamPlaceRepository.save(new MemberTeamPlace(member, teamPlace));
 
-        member.participateTeamPlace(savedMemberTeamPlace);
+        member.participateTeam(savedMemberTeamPlace);
 
         return savedMemberTeamPlace.getId();
     }

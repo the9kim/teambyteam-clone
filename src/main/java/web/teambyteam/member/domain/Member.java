@@ -55,7 +55,7 @@ public class Member {
         this.name.changeName(name);
     }
 
-    public void participateTeamPlace(MemberTeamPlace memberTeamPlace) {
+    public void participateTeam(MemberTeamPlace memberTeamPlace) {
         this.memberTeamPlaces.add(memberTeamPlace);
     }
 
