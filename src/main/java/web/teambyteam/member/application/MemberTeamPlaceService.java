@@ -38,6 +38,10 @@ public class MemberTeamPlaceService {
         TeamPlace teamPlace = teamPlaceRepository.findById(request.teamPlaceId())
                 .orElseThrow(() -> new TeamPlaceException.NotFoundException(request.teamPlaceId()));
 
+        if (memberTeamPlaceRepository.existsByMemberIdAndTeamPlaceId(request.memberId(), request.teamPlaceId())) {
+            throw new MemberTeamPlaceException.RegisterDuplicationException(request.memberId(), request.teamPlaceId());
+        }
+
         MemberTeamPlace savedMemberTeamPlace = memberTeamPlaceRepository.save(new MemberTeamPlace(member, teamPlace));
 
         member.participateTeam(savedMemberTeamPlace);

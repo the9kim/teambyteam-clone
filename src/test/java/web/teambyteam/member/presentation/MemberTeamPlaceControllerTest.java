@@ -2,6 +2,7 @@ package web.teambyteam.member.presentation;
 
 import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,26 @@ class MemberTeamPlaceControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
         });
+    }
+
+    @Test
+    void failToParticipateTeamPlaceDueToDuplication() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        builder.buildMemberTeamPlace(member, teamPlace);
+        ParticipateRequest request = new ParticipateRequest(member.getId(), teamPlace.getId());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .post("/api/member-team-place")
+                .then().log().all()
+                .extract();
+
+        // then
+        Assertions.assertThat(response.statusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 
     @Test
