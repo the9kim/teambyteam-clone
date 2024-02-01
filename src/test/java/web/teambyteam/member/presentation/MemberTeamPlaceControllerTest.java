@@ -2,7 +2,6 @@ package web.teambyteam.member.presentation;
 
 import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +73,11 @@ class MemberTeamPlaceControllerTest {
                 .extract();
 
         // then
-        Assertions.assertThat(response.statusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format("해당 팀플레이스에 이미 가입한 회원입니다. - log info { member_id : %d, team_place_id : %d}", request.memberId(), request.teamPlaceId()));
+        });
+
     }
 
     @Test
