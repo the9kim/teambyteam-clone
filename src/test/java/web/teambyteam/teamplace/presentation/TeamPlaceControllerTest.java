@@ -84,4 +84,54 @@ class TeamPlaceControllerTest {
                 }
         );
     }
+
+    @Test
+    void shouldFailToFindMembersOfNonExistTeam() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        long nonExistTeamPlaceId = -1;
+        TeamMembersRequest request = new TeamMembersRequest(nonExistTeamPlaceId, member.getId());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .get("/api/team-places")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "존재하지 않는 팀플레이스 입니다. - request info { team_place_id : %d }", nonExistTeamPlaceId
+            ));
+        });
+    }
+
+    @Test
+    void shouldFailToFindMembersWithRequestOfNonTeamMember() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        builder.buildMemberTeamPlace(member, teamPlace);
+
+        Member nonTeamMember = builder.buildMember(MemberFixtures.member2());
+        TeamMembersRequest request = new TeamMembersRequest(teamPlace.getId(), nonTeamMember.getId());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .get("/api/team-places")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format("해당 팀플레이스에 소속된 멤버가 아닙니다. - request info {memberId : %d, teamPlaceId : %d]",
+                    nonTeamMember.getId(), teamPlace.getId()));
+        });
+    }
 }

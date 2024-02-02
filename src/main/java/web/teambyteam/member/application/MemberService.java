@@ -8,7 +8,6 @@ import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
-import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.member.exception.MemberException;
@@ -21,13 +20,17 @@ public class MemberService {
     @Autowired
     private final MemberRepository memberRepository;
 
-    public SignUpResponse signUp(SignUpRequest signUpRequest) {
+    public Long signUp(SignUpRequest signUpRequest) {
 
         Member member = new Member(signUpRequest.name(), signUpRequest.email(), signUpRequest.profileImageUrl());
 
+        if (memberRepository.existsByEmail(member.getEmail())) {
+            throw new MemberException.DuplicateMemberException(member.getEmail().getValue());
+        }
+
         Member savedMember = memberRepository.save(member);
 
-        return new SignUpResponse(savedMember.getId());
+        return savedMember.getId();
     }
 
     public MyInfoResponse getMyInfo(Long memberId) {
@@ -51,7 +54,9 @@ public class MemberService {
     }
 
     public void cancelMembership(Long memberId) {
-        memberRepository.deleteById(memberId);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+        memberRepository.deleteById(member.getId());
     }
 
     public ParticipatingTeamsResponse findParticipatingTeams(Long memberId) {

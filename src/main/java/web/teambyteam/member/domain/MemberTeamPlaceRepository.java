@@ -8,4 +8,5 @@ public interface MemberTeamPlaceRepository extends JpaRepository<MemberTeamPlace
 
     Optional<MemberTeamPlace> findByMemberIdAndTeamPlaceId(Long memberId, Long TeamPlaceId);
 
+    boolean existsByMemberIdAndTeamPlaceId(Long memberId, Long teamPlaceId);
 }

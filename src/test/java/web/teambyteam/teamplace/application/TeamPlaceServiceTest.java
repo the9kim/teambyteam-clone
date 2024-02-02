@@ -11,6 +11,7 @@ import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.domain.Member;
+import web.teambyteam.member.exception.MemberTeamPlaceException;
 import web.teambyteam.teamplace.application.dto.TeamCreationRequest;
 import web.teambyteam.teamplace.application.dto.TeamMemberResponse;
 import web.teambyteam.teamplace.application.dto.TeamMembersRequest;
@@ -75,5 +76,37 @@ class TeamPlaceServiceTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response).usingRecursiveComparison().isEqualTo(expected);
         });
+    }
+
+    @Test
+    void findTeamMembers_ofNonExistTeamPlace_shouldFail() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        long nonExistTeamPlaceId = -1;
+        TeamMembersRequest request = new TeamMembersRequest(nonExistTeamPlaceId, member.getId());
+
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                        teamPlaceService.findTeamMembers(request))
+                .isInstanceOf(TeamPlaceException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "존재하지 않는 팀플레이스 입니다. - request info { team_place_id : %d }", nonExistTeamPlaceId
+                ));
+    }
+
+    @Test
+    void findTeamMembers_withRequestOfNonTeamMember_shouldFail() {
+        //given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        builder.buildMemberTeamPlace(member, teamPlace);
+
+        Member nonTeamMember = builder.buildMember(MemberFixtures.member2());
+        TeamMembersRequest request = new TeamMembersRequest(teamPlace.getId(), nonTeamMember.getId());
+
+        // when
+        Assertions.assertThatThrownBy(() -> teamPlaceService.findTeamMembers(request))
+                .isInstanceOf(MemberTeamPlaceException.NotTeamMemberException.class)
+                .hasMessage(String.format("해당 팀플레이스에 소속된 멤버가 아닙니다. - request info {memberId : %d, teamPlaceId : %d]", nonTeamMember.getId(), teamPlace.getId()));
     }
 }

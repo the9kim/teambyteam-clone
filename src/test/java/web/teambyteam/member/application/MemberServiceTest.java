@@ -15,7 +15,6 @@ import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
 import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
-import web.teambyteam.member.application.dto.SignUpResponse;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.member.domain.MemberTeamPlace;
@@ -45,10 +44,10 @@ class MemberServiceTest {
         SignUpRequest request = new SignUpRequest("roy", "roy@gmail.com", "image");
 
         // when
-        SignUpResponse response = memberService.signUp(request);
+        Long memberId = memberService.signUp(request);
 
-        Member savedMember = memberRepository.findById(response.memberId())
-                .orElseThrow(() -> new MemberException.NotFoundException(response.memberId()));
+        Member savedMember = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
 
 
         // then
@@ -57,6 +56,21 @@ class MemberServiceTest {
             softly.assertThat(savedMember.getEmail().getValue()).isEqualTo("roy@gmail.com");
             softly.assertThat(savedMember.getProfileImageUrl().getValue()).isEqualTo("image");
         });
+    }
+
+    @Test
+    void signUp_withDuplicateEmail_shouldFail() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+
+        String duplicateEmail = "roy@gmail.com";
+        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "url");
+
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                        memberService.signUp(request))
+                .isInstanceOf(MemberException.DuplicateMemberException.class)
+                .hasMessage("중복된 이메일입니다. - request info {email : %s", request.email());
     }
 
     /**
@@ -82,15 +96,17 @@ class MemberServiceTest {
      * How can I define Non-exist Member(id)?
      */
     @Test
-    void throwExceptionWithNonExistMemberId() {
+    void getNonExistMember_shouldFail() {
         // given
         long nonExistMemberId = -1;
 
         // when & then
-
         Assertions.assertThatThrownBy(() ->
                         memberService.getMyInfo(nonExistMemberId))
-                .isInstanceOf(MemberException.NotFoundException.class);
+                .isInstanceOf(MemberException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                ));
     }
 
     @Test
@@ -111,8 +127,22 @@ class MemberServiceTest {
     }
 
     @Test
-    void deleteMember() {
+    void updateNonExistMember_shouldFail() {
+        // given
+        long nonExistMemberId = -1;
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("doy");
 
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                        memberService.updateMyInfo(nonExistMemberId, request))
+                .isInstanceOf(MemberException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                ));
+    }
+
+    @Test
+    void deleteMember() {
         // given
         Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
 
@@ -125,6 +155,20 @@ class MemberServiceTest {
                 () -> memberRepository.findById(savedMember.getId())
                         .orElseThrow(() -> new MemberException.NotFoundException(savedMember.getId()))
         ).isInstanceOf(MemberException.NotFoundException.class);
+    }
+
+    @Test
+    void deleteNonExistMember_showFail() {
+        // given
+        long nonExistMemberId = -1;
+
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                        memberService.cancelMembership(nonExistMemberId))
+                .isInstanceOf(MemberException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                ));
     }
 
     @Test
@@ -148,6 +192,20 @@ class MemberServiceTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response).usingRecursiveComparison().isEqualTo(expected);
         });
+    }
+
+    @Test
+    void findTeams_ofNonExistMember_shouldFail() {
+        // given
+        long nonExistMemberId = -1;
+
+        // when & then
+        Assertions.assertThatThrownBy(() ->
+                        memberService.findParticipatingTeams(nonExistMemberId))
+                .isInstanceOf(MemberException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                ));
     }
 
 }

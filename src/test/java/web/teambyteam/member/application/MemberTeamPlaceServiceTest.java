@@ -50,6 +50,20 @@ class MemberTeamPlaceServiceTest {
     }
 
     @Test
+    void failToParticipateTeamWithDuplication() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        builder.buildMemberTeamPlace(member, teamPlace);
+        ParticipateRequest request = new ParticipateRequest(member.getId(), teamPlace.getId());
+
+        // when & then
+        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.participateTeam(request))
+                .isInstanceOf(MemberTeamPlaceException.RegisterDuplicationException.class)
+                .hasMessage(String.format("해당 팀플레이스에 이미 가입한 회원입니다. - log info { member_id : %d, team_place_id : %d}", request.memberId(), request.teamPlaceId()));
+    }
+
+    @Test
     void leaveTeamPlace() {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
@@ -69,4 +83,16 @@ class MemberTeamPlaceServiceTest {
         ).isInstanceOf(MemberTeamPlaceException.NotFoundException.class);
     }
 
+    @Test
+    void leaveNonExistMemberTeamPlace_shouldFail() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        LeavingTeamRequest request = new LeavingTeamRequest(member.getId(), teamPlace.getId());
+
+        // when & then
+        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.leaveTeam(request))
+                .isInstanceOf(MemberTeamPlaceException.NotFoundException.class)
+                .hasMessage("존재하지 않는 멤버의 팀 공간입니다.");
+    }
 }
