@@ -25,4 +25,13 @@ public class MemberException extends RuntimeException {
         }
     }
 
+    public static class DuplicateMemberException extends MemberException {
+
+        public DuplicateMemberException(String email) {
+            super(String.format(
+                    "중복된 이메일입니다. - request info {email : %s", email)
+            );
+        }
+    }
+
 }

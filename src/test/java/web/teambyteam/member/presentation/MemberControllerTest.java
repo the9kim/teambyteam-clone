@@ -65,7 +65,30 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
         });
+    }
 
+    @Test
+    void shouldFailToSignUpDuplicateMember() {
+
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        String duplicateEmail = "roy@gmail.com";
+        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "url");
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .post("/api/me")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.CONFLICT.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "중복된 이메일입니다. - request info {email : %s", duplicateEmail));
+        });
     }
 
     /**
@@ -94,6 +117,26 @@ class MemberControllerTest {
     }
 
     @Test
+    void shouldFailToGetNonExistMemberInfo() {
+        // given
+        long nonExistMemberId = -1;
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .get("/api/me/{memberId}", nonExistMemberId)
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+            ));
+        });
+    }
+
+    @Test
     void updateMyInfo() {
 
         // given
@@ -113,6 +156,29 @@ class MemberControllerTest {
     }
 
     @Test
+    void shouldFailToUpdateNonExistMember() {
+        // given
+        long nonExistMemberId = -1;
+        MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .patch("/api/me/{memberId}", nonExistMemberId)
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+            ));
+        });
+    }
+
+    @Test
     void deleteMember() {
         // given
         Member savedMember = builder.buildMember(MemberFixtures.member1());
@@ -127,6 +193,26 @@ class MemberControllerTest {
         // then
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        });
+    }
+
+    @Test
+    void shouldFailToDeleteNonExistMember() {
+        // given
+        long nonExistMemberId = -1;
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .delete("/api/me/{memberId}", nonExistMemberId)
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+            ));
         });
     }
 
@@ -155,4 +241,25 @@ class MemberControllerTest {
             softly.assertThat(response.body().jsonPath().getList("teamPlaces.teamPlaceName.value")).contains("teambyteam", "royTeam");
         });
     }
+
+    @Test
+    void shouldFailToFindTeamPlacesOfNonExistMember() {
+        // given
+        long nonExistMemberId = -1;
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .get("/api/me/team-places/{memberId}", nonExistMemberId)
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+            ));
+        });
+    }
+
 }

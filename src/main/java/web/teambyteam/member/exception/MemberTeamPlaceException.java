@@ -19,4 +19,11 @@ public class MemberTeamPlaceException extends RuntimeException {
                     "해당 팀플레이스에 이미 가입한 회원입니다. - log info { member_id : %d, team_place_id : %d}", memberId, teamPlaceId));
         }
     }
+
+    public static class NotTeamMemberException extends MemberTeamPlaceException {
+        public NotTeamMemberException(Long memberId, Long teamPlaceId) {
+            super(String.format(
+                    "해당 팀플레이스에 소속된 멤버가 아닙니다. - request info {memberId : %d, teamPlaceId : %d]", memberId, teamPlaceId));
+        }
+    }
 }

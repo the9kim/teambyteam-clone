@@ -102,4 +102,27 @@ class MemberTeamPlaceControllerTest {
         });
     }
 
+    @Test
+    void shouldFailToLeaveNonExistTeamPlace() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+        TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
+        LeavingTeamRequest request = new LeavingTeamRequest(member.getId(), teamPlace.getId());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .delete("/api/member-team-place")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo("존재하지 않는 멤버의 팀 공간입니다.");
+        });
+
+    }
+
 }

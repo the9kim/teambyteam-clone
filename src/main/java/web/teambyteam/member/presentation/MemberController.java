@@ -15,7 +15,6 @@ import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
-import web.teambyteam.member.application.dto.SignUpResponse;
 
 import java.net.URI;
 
@@ -30,9 +29,9 @@ public class MemberController {
     @PostMapping
     public ResponseEntity<Void> signUp(@RequestBody SignUpRequest request) {
 
-        SignUpResponse response = memberService.signUp(request);
+        Long memberId = memberService.signUp(request);
 
-        URI location = URI.create("/api/me/" + response.memberId());
+        URI location = URI.create("/api/me/" + memberId);
 
         return ResponseEntity.created(location).build();
     }

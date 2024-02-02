@@ -11,7 +11,7 @@ public interface TeamPlaceRepository extends JpaRepository<TeamPlace, Long> {
 
     @Query("SELECT mt FROM MemberTeamPlace mt " +
             "join mt.member m " +
-            "join mt.teamPlace t "+
+            "join mt.teamPlace t " +
             "WHERE t.id=:id")
     List<MemberTeamPlace> findMemberTeamPlacesById(@Param("id") Long teamPlaceId);
 }
