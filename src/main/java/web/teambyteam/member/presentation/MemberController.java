@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import web.teambyteam.global.AuthMember;
+import web.teambyteam.global.AuthPrincipal;
 import web.teambyteam.member.application.MemberService;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
@@ -37,10 +39,10 @@ public class MemberController {
     }
 
 
-    @GetMapping("/{memberId}")
-    public ResponseEntity<MyInfoResponse> getMyInfo(@PathVariable Long memberId) {
+    @GetMapping
+    public ResponseEntity<MyInfoResponse> getMyInfo(@AuthPrincipal AuthMember authMember) {
 
-        MyInfoResponse response = memberService.getMyInfo(memberId);
+        MyInfoResponse response = memberService.getMyInfo(authMember);
 
         return ResponseEntity.ok(response);
     }

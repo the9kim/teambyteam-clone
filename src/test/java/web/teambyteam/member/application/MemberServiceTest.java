@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
+import web.teambyteam.global.AuthMember;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
@@ -82,7 +83,7 @@ class MemberServiceTest {
         Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
-        MyInfoResponse response = memberService.getMyInfo(savedMember.getId());
+        MyInfoResponse response = memberService.getMyInfo(new AuthMember(savedMember.getEmail().getValue()));
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -98,14 +99,14 @@ class MemberServiceTest {
     @Test
     void getNonExistMember_shouldFail() {
         // given
-        long nonExistMemberId = -1;
+        String nonExistMemberEmail = "nonExist@gmail.com";
 
         // when & then
         Assertions.assertThatThrownBy(() ->
-                        memberService.getMyInfo(nonExistMemberId))
+                        memberService.getMyInfo(new AuthMember(nonExistMemberEmail)))
                 .isInstanceOf(MemberException.NotFoundException.class)
                 .hasMessage(String.format(
-                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %d}", nonExistMemberEmail
                 ));
     }
 
@@ -118,7 +119,7 @@ class MemberServiceTest {
         // when
         memberService.updateMyInfo(savedMember.getId(), request);
 
-        MyInfoResponse myInfo = memberService.getMyInfo(savedMember.getId());
+        MyInfoResponse myInfo = memberService.getMyInfo(new AuthMember(savedMember.getEmail().getValue()));
 
         // then
         SoftAssertions.assertSoftly(softly -> {

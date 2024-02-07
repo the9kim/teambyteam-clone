@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import web.teambyteam.global.AuthMember;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.domain.vo.Email;
 import web.teambyteam.member.exception.MemberException;
 
 @Service
@@ -33,10 +35,10 @@ public class MemberService {
         return savedMember.getId();
     }
 
-    public MyInfoResponse getMyInfo(Long memberId) {
+    public MyInfoResponse getMyInfo(AuthMember authMember) {
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         MyInfoResponse response = MyInfoResponse.of(member);
 
