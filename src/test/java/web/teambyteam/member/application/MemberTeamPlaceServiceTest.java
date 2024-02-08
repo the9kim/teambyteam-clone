@@ -10,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
-import web.teambyteam.member.application.dto.LeavingTeamRequest;
-import web.teambyteam.member.application.dto.ParticipateRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberTeamPlace;
 import web.teambyteam.member.domain.MemberTeamPlaceRepository;
@@ -37,10 +35,9 @@ class MemberTeamPlaceServiceTest {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
-        ParticipateRequest request = new ParticipateRequest(member.getId(), teamPlace.getId());
 
         // when
-        Long memberTeamPlaceId = memberTeamPlaceService.participateTeam(request);
+        Long memberTeamPlaceId = memberTeamPlaceService.participateTeam(MemberFixtures.member1Request(), teamPlace.getId());
 
         MemberTeamPlace memberTeamPlace = memberTeamPlaceRepository.findById(memberTeamPlaceId).get();
 
@@ -55,12 +52,11 @@ class MemberTeamPlaceServiceTest {
         Member member = builder.buildMember(MemberFixtures.member1());
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
         builder.buildMemberTeamPlace(member, teamPlace);
-        ParticipateRequest request = new ParticipateRequest(member.getId(), teamPlace.getId());
 
         // when & then
-        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.participateTeam(request))
+        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.participateTeam(MemberFixtures.member1Request(), teamPlace.getId()))
                 .isInstanceOf(MemberTeamPlaceException.RegisterDuplicationException.class)
-                .hasMessage(String.format("해당 팀플레이스에 이미 가입한 회원입니다. - log info { member_id : %d, team_place_id : %d}", request.memberId(), request.teamPlaceId()));
+                .hasMessage(String.format("해당 팀플레이스에 이미 가입한 회원입니다. - log info { member_id : %d, team_place_id : %d}", member.getId(), teamPlace.getId()));
     }
 
     @Test
@@ -69,10 +65,9 @@ class MemberTeamPlaceServiceTest {
         Member member = builder.buildMember(MemberFixtures.member1());
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
         MemberTeamPlace memberTeamPlace = builder.buildMemberTeamPlace(member, teamPlace);
-        LeavingTeamRequest request = new LeavingTeamRequest(memberTeamPlace.getMember().getId(), memberTeamPlace.getTeamPlace().getId());
 
         // when
-        memberTeamPlaceService.leaveTeam(request);
+        memberTeamPlaceService.leaveTeam(MemberFixtures.member1Request(), teamPlace.getId());
 
         System.out.println(memberTeamPlace.getId());
 
@@ -88,10 +83,9 @@ class MemberTeamPlaceServiceTest {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
-        LeavingTeamRequest request = new LeavingTeamRequest(member.getId(), teamPlace.getId());
 
         // when & then
-        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.leaveTeam(request))
+        Assertions.assertThatThrownBy(() -> memberTeamPlaceService.leaveTeam(MemberFixtures.member1Request(), teamPlace.getId()))
                 .isInstanceOf(MemberTeamPlaceException.NotFoundException.class)
                 .hasMessage("존재하지 않는 멤버의 팀 공간입니다.");
     }

@@ -48,22 +48,22 @@ public class MemberService {
     /**
      * Why isn't the update query being sent when I call this method?
      */
-    public void updateMyInfo(Long memberId, MyInfoUpdateRequest request) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public void updateMyInfo(AuthMember authMember, MyInfoUpdateRequest request) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         member.updateName(request.name());
     }
 
-    public void cancelMembership(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public void cancelMembership(AuthMember authMember) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
         memberRepository.deleteById(member.getId());
     }
 
-    public ParticipatingTeamsResponse findParticipatingTeams(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public ParticipatingTeamsResponse findParticipatingTeams(AuthMember authMember) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         return ParticipatingTeamsResponse.of(member.getMemberTeamPlaces());
     }

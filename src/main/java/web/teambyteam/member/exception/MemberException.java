@@ -26,7 +26,7 @@ public class MemberException extends RuntimeException {
 
         public NotFoundException(String email) {
             super(String.format(
-                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %d}", email
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", email
             ));
         }
     }

@@ -42,10 +42,12 @@ class TeamPlaceControllerTest {
     void createTeam() {
         // given
         TeamCreationRequest request = new TeamCreationRequest("팀바팀");
+        Member member1 = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
                 .body(request)
                 .post("/api/team-places")
                 .then().log().all()
@@ -65,13 +67,11 @@ class TeamPlaceControllerTest {
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
         builder.buildMemberTeamPlace(member1, teamPlace);
         builder.buildMemberTeamPlace(member2, teamPlace);
-        TeamMembersRequest request = new TeamMembersRequest(teamPlace.getId(), member1.getId());
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", teamPlace.getId())
                 .then().log().all()
                 .extract();
 
@@ -94,9 +94,8 @@ class TeamPlaceControllerTest {
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", nonExistTeamPlaceId)
                 .then().log().all()
                 .extract();
 
@@ -121,9 +120,8 @@ class TeamPlaceControllerTest {
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER2_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", teamPlace.getId())
                 .then().log().all()
                 .extract();
 

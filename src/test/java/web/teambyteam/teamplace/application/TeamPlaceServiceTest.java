@@ -14,7 +14,6 @@ import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.exception.MemberTeamPlaceException;
 import web.teambyteam.teamplace.application.dto.TeamCreationRequest;
 import web.teambyteam.teamplace.application.dto.TeamMemberResponse;
-import web.teambyteam.teamplace.application.dto.TeamMembersRequest;
 import web.teambyteam.teamplace.application.dto.TeamMembersResponse;
 import web.teambyteam.teamplace.domain.TeamPlace;
 import web.teambyteam.teamplace.domain.TeamPlaceRepository;
@@ -42,9 +41,10 @@ class TeamPlaceServiceTest {
         // given
         String name = "팀바팀";
         TeamCreationRequest request = new TeamCreationRequest(name);
+        Member member1 = builder.buildMember(MemberFixtures.member1());
 
         // when
-        Long teamPlaceId = teamPlaceService.createTeamPlace(request);
+        Long teamPlaceId = teamPlaceService.createTeamPlace(MemberFixtures.member1Request(), request);
 
         TeamPlace teamPlace = teamPlaceRepository.findById(teamPlaceId)
                 .orElseThrow(() -> new TeamPlaceException.NameLengthException(20, request.name().length()));
@@ -70,7 +70,7 @@ class TeamPlaceServiceTest {
         );
 
         // when
-        TeamMembersResponse response = teamPlaceService.findTeamMembers(new TeamMembersRequest(teamPlace.getId(), member1.getId()));
+        TeamMembersResponse response = teamPlaceService.findTeamMembers(MemberFixtures.member1Request(), teamPlace.getId());
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -83,11 +83,10 @@ class TeamPlaceServiceTest {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
         long nonExistTeamPlaceId = -1;
-        TeamMembersRequest request = new TeamMembersRequest(nonExistTeamPlaceId, member.getId());
 
         // when & then
         Assertions.assertThatThrownBy(() ->
-                        teamPlaceService.findTeamMembers(request))
+                        teamPlaceService.findTeamMembers(MemberFixtures.member1Request(), nonExistTeamPlaceId))
                 .isInstanceOf(TeamPlaceException.NotFoundException.class)
                 .hasMessage(String.format(
                         "존재하지 않는 팀플레이스 입니다. - request info { team_place_id : %d }", nonExistTeamPlaceId
@@ -102,10 +101,9 @@ class TeamPlaceServiceTest {
         builder.buildMemberTeamPlace(member, teamPlace);
 
         Member nonTeamMember = builder.buildMember(MemberFixtures.member2());
-        TeamMembersRequest request = new TeamMembersRequest(teamPlace.getId(), nonTeamMember.getId());
 
         // when
-        Assertions.assertThatThrownBy(() -> teamPlaceService.findTeamMembers(request))
+        Assertions.assertThatThrownBy(() -> teamPlaceService.findTeamMembers(MemberFixtures.member2Request(), teamPlace.getId()))
                 .isInstanceOf(MemberTeamPlaceException.NotTeamMemberException.class)
                 .hasMessage(String.format("해당 팀플레이스에 소속된 멤버가 아닙니다. - request info {memberId : %d, teamPlaceId : %d]", nonTeamMember.getId(), teamPlace.getId()));
     }
