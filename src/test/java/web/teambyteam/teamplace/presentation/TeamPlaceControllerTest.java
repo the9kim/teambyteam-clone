@@ -15,6 +15,7 @@ import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.domain.Member;
+import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.teamplace.application.dto.TeamCreationRequest;
 import web.teambyteam.teamplace.application.dto.TeamMembersRequest;
 import web.teambyteam.teamplace.domain.TeamPlace;
@@ -26,6 +27,9 @@ class TeamPlaceControllerTest {
 
     @Autowired
     TeamPlaceRepository teamPlaceRepository;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Autowired
     FixtureBuilder builder;
@@ -56,6 +60,31 @@ class TeamPlaceControllerTest {
         // then
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
+        });
+    }
+
+    @Test
+    void shouldFailToCreateTeamPlaceWithNonExistMember() {
+        // given
+        TeamCreationRequest request = new TeamCreationRequest(TeamPlaceFixtures.TEAM1_NAME);
+        String nonExistMemberAuth = MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH;
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .header("authorization", nonExistMemberAuth)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .post("/api/team-places")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                            "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
+                    )
+            );
         });
     }
 

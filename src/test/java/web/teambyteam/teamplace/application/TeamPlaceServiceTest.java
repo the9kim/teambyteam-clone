@@ -10,7 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
+import web.teambyteam.global.AuthMember;
 import web.teambyteam.member.domain.Member;
+import web.teambyteam.member.domain.MemberTeamPlace;
+import web.teambyteam.member.domain.MemberTeamPlaceRepository;
+import web.teambyteam.member.exception.MemberException;
 import web.teambyteam.member.exception.MemberTeamPlaceException;
 import web.teambyteam.teamplace.application.dto.TeamCreationRequest;
 import web.teambyteam.teamplace.application.dto.TeamMemberResponse;
@@ -33,6 +37,9 @@ class TeamPlaceServiceTest {
     TeamPlaceRepository teamPlaceRepository;
 
     @Autowired
+    MemberTeamPlaceRepository memberTeamPlaceRepository;
+
+    @Autowired
     FixtureBuilder builder;
 
 
@@ -41,16 +48,36 @@ class TeamPlaceServiceTest {
         // given
         String name = "팀바팀";
         TeamCreationRequest request = new TeamCreationRequest(name);
-        Member member1 = builder.buildMember(MemberFixtures.member1());
+        Member member = builder.buildMember(MemberFixtures.member1());
 
         // when
         Long teamPlaceId = teamPlaceService.createTeamPlace(MemberFixtures.member1Request(), request);
 
         TeamPlace teamPlace = teamPlaceRepository.findById(teamPlaceId)
                 .orElseThrow(() -> new TeamPlaceException.NameLengthException(20, request.name().length()));
+        MemberTeamPlace memberTeamPlace = memberTeamPlaceRepository.findByMemberIdAndTeamPlaceId(member.getId(), teamPlace.getId())
+                .orElseThrow(() -> new MemberTeamPlaceException.NotFoundException());
 
         // then
-        Assertions.assertThat(teamPlace.getName().getValue()).isEqualTo(name);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(teamPlace.getName().getValue()).isEqualTo(name);
+            softly.assertThat(member.getMemberTeamPlaces()).contains(memberTeamPlace);
+        });
+    }
+
+    @Test
+    void createTeam_byNonExistMember_shouldFail() {
+        // given
+        TeamCreationRequest request = new TeamCreationRequest(TeamPlaceFixtures.TEAM1_NAME);
+        AuthMember nonExistMember = MemberFixtures.nonExistMemberRequest();
+
+        // when & then
+
+        Assertions.assertThatThrownBy(() -> teamPlaceService.createTeamPlace(nonExistMember, request))
+                .isInstanceOf(MemberException.NotFoundException.class)
+                .hasMessage(String.format(
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", nonExistMember.email()
+                ));
     }
 
     @Test

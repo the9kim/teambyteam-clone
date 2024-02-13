@@ -5,7 +5,7 @@ import web.teambyteam.member.domain.Member;
 
 public class MemberFixtures {
 
-
+    public static final String NON_EXIST_MEMBER_NAME = "nonExist";
     public static final String MEMBER1_NAME = "roy";
     public static final String MEMBER2_NAME = "hoy";
 
@@ -13,6 +13,7 @@ public class MemberFixtures {
     public static final String MEMBER1_EMAIL = "roy@gmail.com";
     public static final String MEMBER2_EMAIL = "hoy@gmail.com";
 
+    public static final String NON_EXIST_MEMBER_PROFILE_IMAGE_URL = "nonExist";
     public static final String MEMBER1_PROFILE_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Pharaoh.svg/440px-Pharaoh.svg.png";
     public static final String MEMBER2_PROFILE_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Pharaoh.svg/440px-Pharaoh.svg.png";
 
@@ -32,6 +33,14 @@ public class MemberFixtures {
 
     public static AuthMember member2Request() {
         return new AuthMember(MEMBER2_EMAIL);
+    }
+
+    public static Member nonExistMember() {
+        return new Member(
+                NON_EXIST_MEMBER_NAME,
+                NON_EXIST_MEMBER_EMAIL,
+                NON_EXIST_MEMBER_PROFILE_IMAGE_URL
+        );
     }
 
     public static Member member1() {
