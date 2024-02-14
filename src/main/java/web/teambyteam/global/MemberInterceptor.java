@@ -49,6 +49,10 @@ public class MemberInterceptor implements HandlerInterceptor {
             Member member = memberRepository.findByEmail(new Email(userEmail))
                     .orElseThrow(() -> new MemberException.NotFoundException(userEmail));
 
+            if (!member.getPassword().getValue().equals(password)) {
+                throw new MemberException.WrongPasswordException();
+            }
+
             AuthMember authMember = new AuthMember(member.getEmail().getValue());
             request.setAttribute("authMember", authMember);
 

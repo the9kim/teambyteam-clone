@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import web.teambyteam.member.domain.vo.Email;
 import web.teambyteam.member.domain.vo.Name;
+import web.teambyteam.member.domain.vo.Password;
 import web.teambyteam.member.domain.vo.ProfileImageUrl;
 
 import java.util.ArrayList;
@@ -34,20 +35,24 @@ public class Member {
     private Email email;
 
     @Embedded
+    private Password password;
+
+    @Embedded
     private ProfileImageUrl profileImageUrl;
 
     @OneToMany(mappedBy = "member")
     private List<MemberTeamPlace> memberTeamPlaces;
 
-    public Member(Name name, Email email, ProfileImageUrl profileImageUrl) {
+    public Member(Name name, Email email, Password password, ProfileImageUrl profileImageUrl) {
         this.name = name;
         this.email = email;
+        this.password = password;
         this.profileImageUrl = profileImageUrl;
         this.memberTeamPlaces = new ArrayList<>();
     }
 
-    public Member(String name, String email, String profileImageUrl) {
-        this(new Name(name), new Email(email), new ProfileImageUrl(profileImageUrl));
+    public Member(String name, String email, String password, String profileImageUrl) {
+        this(new Name(name), new Email(email), new Password(password), new ProfileImageUrl(profileImageUrl));
 
     }
 

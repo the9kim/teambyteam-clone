@@ -37,6 +37,10 @@ public class MemberController {
         return ResponseEntity.created(location).build();
     }
 
+    @PostMapping("/log-in")
+    public ResponseEntity<Void> login(@AuthPrincipal AuthMember member) {
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping
     public ResponseEntity<MyInfoResponse> getMyInfo(@AuthPrincipal AuthMember member) {

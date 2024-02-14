@@ -24,7 +24,7 @@ public class MemberService {
 
     public Long signUp(SignUpRequest signUpRequest) {
 
-        Member member = new Member(signUpRequest.name(), signUpRequest.email(), signUpRequest.profileImageUrl());
+        Member member = new Member(signUpRequest.name(), signUpRequest.email(), signUpRequest.password(), signUpRequest.profileImageUrl());
 
         if (memberRepository.existsByEmail(member.getEmail())) {
             throw new MemberException.DuplicateMemberException(member.getEmail().getValue());

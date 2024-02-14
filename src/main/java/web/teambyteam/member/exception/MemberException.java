@@ -16,6 +16,22 @@ public class MemberException extends RuntimeException {
         }
     }
 
+    public static class InvalidPasswordException extends MemberException {
+        public InvalidPasswordException() {
+            super(String.format(
+                    "비밀번호는 최소 1자, 최대 16자로 구성된 문자, 숫자, 특수 기호만 사용할 수 있습니다."
+            ));
+        }
+    }
+
+    public static class WrongPasswordException extends MemberException {
+        public WrongPasswordException() {
+            super(String.format(
+                    "아이디와 비밀번호가 일치하지 않습니다."
+            ));
+        }
+    }
+
     public static class NotFoundException extends MemberException {
 
         public NotFoundException(Long memberId) {

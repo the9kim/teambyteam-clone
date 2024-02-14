@@ -3,6 +3,8 @@ package web.teambyteam.member.application;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -42,7 +44,7 @@ class MemberServiceTest {
     void signUp() {
 
         // given
-        SignUpRequest request = new SignUpRequest("roy", "roy@gmail.com", "image");
+        SignUpRequest request = new SignUpRequest("roy", "roy@gmail.com", "1234", "image");
 
         // when
         Long memberId = memberService.signUp(request);
@@ -59,13 +61,34 @@ class MemberServiceTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "12345678()", "abcdefgh[]", "가나다라{}", "가나다라_-+",
+            "12345678|", "abcdefgh'", "가나다라\"", "가나다라\\",
+            "12345678<>", "abcdefgh?", "가나다라/", "가나다라.",
+    })
+    void singUp_withInvalidPassword_shouldFail(String wrongPassword) {
+        // given
+        SignUpRequest request = new SignUpRequest(
+                "roy",
+                "roy@gmail.com",
+                wrongPassword,
+                "image");
+        // when & then
+        Assertions.assertThatThrownBy(() -> memberService.signUp(request))
+                .isInstanceOf(MemberException.InvalidPasswordException.class)
+                .hasMessage(String.format(
+                        "비밀번호는 최소 1자, 최대 16자로 구성된 문자, 숫자, 특수 기호만 사용할 수 있습니다."
+                ));
+    }
+
     @Test
     void signUp_withDuplicateEmail_shouldFail() {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
 
         String duplicateEmail = "roy@gmail.com";
-        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "url");
+        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "1234", "url");
 
         // when & then
         Assertions.assertThatThrownBy(() ->
