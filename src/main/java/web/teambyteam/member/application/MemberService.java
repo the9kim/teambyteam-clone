@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import web.teambyteam.global.AuthMember;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamsResponse;
 import web.teambyteam.member.application.dto.SignUpRequest;
 import web.teambyteam.member.domain.Member;
 import web.teambyteam.member.domain.MemberRepository;
+import web.teambyteam.member.domain.vo.Email;
 import web.teambyteam.member.exception.MemberException;
 
 @Service
@@ -22,7 +24,7 @@ public class MemberService {
 
     public Long signUp(SignUpRequest signUpRequest) {
 
-        Member member = new Member(signUpRequest.name(), signUpRequest.email(), signUpRequest.profileImageUrl());
+        Member member = new Member(signUpRequest.name(), signUpRequest.email(), signUpRequest.password(), signUpRequest.profileImageUrl());
 
         if (memberRepository.existsByEmail(member.getEmail())) {
             throw new MemberException.DuplicateMemberException(member.getEmail().getValue());
@@ -33,10 +35,10 @@ public class MemberService {
         return savedMember.getId();
     }
 
-    public MyInfoResponse getMyInfo(Long memberId) {
+    public MyInfoResponse getMyInfo(AuthMember authMember) {
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         MyInfoResponse response = MyInfoResponse.of(member);
 
@@ -46,22 +48,22 @@ public class MemberService {
     /**
      * Why isn't the update query being sent when I call this method?
      */
-    public void updateMyInfo(Long memberId, MyInfoUpdateRequest request) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public void updateMyInfo(AuthMember authMember, MyInfoUpdateRequest request) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         member.updateName(request.name());
     }
 
-    public void cancelMembership(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public void cancelMembership(AuthMember authMember) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
         memberRepository.deleteById(member.getId());
     }
 
-    public ParticipatingTeamsResponse findParticipatingTeams(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException.NotFoundException(memberId));
+    public ParticipatingTeamsResponse findParticipatingTeams(AuthMember authMember) {
+        Member member = memberRepository.findByEmail(new Email(authMember.email()))
+                .orElseThrow(() -> new MemberException.NotFoundException(authMember.email()));
 
         return ParticipatingTeamsResponse.of(member.getMemberTeamPlaces());
     }

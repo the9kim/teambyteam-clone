@@ -1,4 +1,4 @@
-package web.teambyteam;
+package web.teambyteam.global;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +11,16 @@ import web.teambyteam.teamplace.exception.TeamPlaceException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MemberTeamPlaceException.RegisterDuplicationException.class)
-    public ResponseEntity<String> unauthorizedException(MemberTeamPlaceException.RegisterDuplicationException e) {
+    @ExceptionHandler(value = {
+            MemberException.InvalidPasswordException.class})
+    public ResponseEntity<String> badRequestException(Exception e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(value = {
+            MemberTeamPlaceException.RegisterDuplicationException.class,
+            MemberException.WrongPasswordException.class})
+    public ResponseEntity<String> unauthorizedException(Exception e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 

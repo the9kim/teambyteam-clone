@@ -3,13 +3,13 @@ package web.teambyteam.member.presentation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import web.teambyteam.global.AuthMember;
+import web.teambyteam.global.AuthPrincipal;
 import web.teambyteam.member.application.MemberTeamPlaceService;
-import web.teambyteam.member.application.dto.LeavingTeamRequest;
-import web.teambyteam.member.application.dto.ParticipateRequest;
 
 import java.net.URI;
 
@@ -20,18 +20,22 @@ public class MemberTeamPlaceController {
 
     private final MemberTeamPlaceService memberTeamPlaceService;
 
-    @PostMapping
-    public ResponseEntity<Void> participateTeam(@RequestBody ParticipateRequest request) {
-        long memberTeamPlaceId = memberTeamPlaceService.participateTeam(request);
+    @PostMapping("/{teamPlaceId}")
+    public ResponseEntity<Void> participateTeam(
+            @AuthPrincipal AuthMember member,
+            @PathVariable Long teamPlaceId) {
+        long memberTeamPlaceId = memberTeamPlaceService.participateTeam(member, teamPlaceId);
 
         URI location = URI.create("/api/member-team-place/" + memberTeamPlaceId);
 
         return ResponseEntity.created(location).build();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> leaveTeam(@RequestBody LeavingTeamRequest request) {
-        memberTeamPlaceService.leaveTeam(request);
+    @DeleteMapping("/{teamPlaceId}")
+    public ResponseEntity<Void> leaveTeam(
+            @AuthPrincipal AuthMember member,
+            @PathVariable Long teamPlaceId) {
+        memberTeamPlaceService.leaveTeam(member, teamPlaceId);
 
         return ResponseEntity.noContent().build();
     }

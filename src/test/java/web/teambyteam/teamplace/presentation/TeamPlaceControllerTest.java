@@ -15,6 +15,7 @@ import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
 import web.teambyteam.member.domain.Member;
+import web.teambyteam.member.domain.MemberRepository;
 import web.teambyteam.teamplace.application.dto.TeamCreationRequest;
 import web.teambyteam.teamplace.application.dto.TeamMembersRequest;
 import web.teambyteam.teamplace.domain.TeamPlace;
@@ -26,6 +27,9 @@ class TeamPlaceControllerTest {
 
     @Autowired
     TeamPlaceRepository teamPlaceRepository;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Autowired
     FixtureBuilder builder;
@@ -42,10 +46,12 @@ class TeamPlaceControllerTest {
     void createTeam() {
         // given
         TeamCreationRequest request = new TeamCreationRequest("팀바팀");
+        Member member1 = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
                 .body(request)
                 .post("/api/team-places")
                 .then().log().all()
@@ -58,6 +64,31 @@ class TeamPlaceControllerTest {
     }
 
     @Test
+    void shouldFailToCreateTeamPlaceWithNonExistMember() {
+        // given
+        TeamCreationRequest request = new TeamCreationRequest(TeamPlaceFixtures.TEAM1_NAME);
+        String nonExistMemberAuth = MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH;
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .header("authorization", nonExistMemberAuth)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .post("/api/team-places")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                            "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
+                    )
+            );
+        });
+    }
+
+    @Test
     void findTeamMembers() {
         // given
         Member member1 = builder.buildMember(MemberFixtures.member1());
@@ -65,13 +96,11 @@ class TeamPlaceControllerTest {
         TeamPlace teamPlace = builder.buildTeamPlace(TeamPlaceFixtures.teamPlace1());
         builder.buildMemberTeamPlace(member1, teamPlace);
         builder.buildMemberTeamPlace(member2, teamPlace);
-        TeamMembersRequest request = new TeamMembersRequest(teamPlace.getId(), member1.getId());
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", teamPlace.getId())
                 .then().log().all()
                 .extract();
 
@@ -94,9 +123,8 @@ class TeamPlaceControllerTest {
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", nonExistTeamPlaceId)
                 .then().log().all()
                 .extract();
 
@@ -121,9 +149,8 @@ class TeamPlaceControllerTest {
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(request)
-                .get("/api/team-places")
+                .header("authorization", MemberFixtures.MEMBER2_BASIC_AUTH)
+                .get("/api/team-places/{teamPlaceId}", teamPlace.getId())
                 .then().log().all()
                 .extract();
 

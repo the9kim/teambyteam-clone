@@ -1,12 +1,15 @@
 package web.teambyteam.member.presentation;
 
 import io.restassured.RestAssured;
+import io.restassured.http.Header;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -50,7 +53,7 @@ class MemberControllerTest {
     void signUp() {
         // given
         SignUpRequest request = new SignUpRequest(
-                "roy", "roy@gamil.com", "abc");
+                "roy", "roy@gamil.com", "1234", "abc");
 
         // when
         ExtractableResponse<Response> response =
@@ -69,11 +72,10 @@ class MemberControllerTest {
 
     @Test
     void shouldFailToSignUpDuplicateMember() {
-
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
         String duplicateEmail = "roy@gmail.com";
-        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "url");
+        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "1234", "url");
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
@@ -91,6 +93,93 @@ class MemberControllerTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "12345678()", "abcdefgh[]", "가나다라{}", "가나다라_-+",
+            "12345678|", "abcdefgh'", "가나다라\"", "가나다라\\",
+            "12345678<>", "abcdefgh?", "가나다라/", "가나다라.",
+    })
+    void shouldFailToSignUpWithInvalidPassword(String wrongPassword) {
+        // given
+        SignUpRequest request = new SignUpRequest(
+                "roy",
+                "roy@gmail.com",
+                wrongPassword,
+                "image"
+        );
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(request)
+                .post("/api/me")
+                .then().log().all()
+                .extract();
+
+        SoftAssertions.assertSoftly(softly -> {
+                    softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+                    softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                            "비밀번호는 최소 1자, 최대 16자로 구성된 문자, 숫자, 특수 기호만 사용할 수 있습니다."
+                    ));
+                }
+        );
+    }
+
+    @Test
+    void login() {
+        // given
+        Member member = builder.buildMember(MemberFixtures.member1());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH)
+                .post("/api/me/log-in")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+        });
+    }
+
+    @Test
+    void shouldFailToLoginWithNonExistMember() {
+        // given & when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH_WRONG_PASSWORD)
+                .post("/api/me/log-in")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
+            softly.assertThat(response.body().asString()).isEqualTo(String.format(
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.MEMBER1_EMAIL
+            ));
+        });
+    }
+
+    @Test
+    void shouldFailToLoginWithInvalidPassword() {
+        // given
+        Member Member = builder.buildMember(MemberFixtures.member1());
+
+        // when
+        ExtractableResponse response = RestAssured.given().log().all()
+                .header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH_WRONG_PASSWORD)
+                .post("/api/me/log-in")
+                .then().log().all()
+                .extract();
+
+        // then
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+            softly.assertThat(response.body().asString()).isEqualTo("아이디와 비밀번호가 일치하지 않습니다.");
+        });
+    }
+
     /**
      * There is need to insert member first
      */
@@ -100,10 +189,12 @@ class MemberControllerTest {
         // given
         Member savedMember = builder.buildMember(MemberFixtures.member1());
 
+
         // when
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
-                        .get("/api/me/{memberId}", savedMember.getId())
+                        .header(new Header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH))
+                        .get("/api/me")
                         .then().log().all()
                         .extract();
 
@@ -118,12 +209,11 @@ class MemberControllerTest {
 
     @Test
     void shouldFailToGetNonExistMemberInfo() {
-        // given
-        long nonExistMemberId = -1;
+        // given & when
 
-        // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .get("/api/me/{memberId}", nonExistMemberId)
+                .header("authorization", MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH)
+                .get("/api/me")
                 .then().log().all()
                 .extract();
 
@@ -131,8 +221,8 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
             softly.assertThat(response.body().asString()).isEqualTo(String.format(
-                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
-            ));
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL)
+            );
         });
     }
 
@@ -140,14 +230,15 @@ class MemberControllerTest {
     void updateMyInfo() {
 
         // given
-        Member savedMember = builder.buildMember(MemberFixtures.member1());
+        Member member1 = builder.buildMember(MemberFixtures.member1());
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
         ExtractableResponse<Response> response = RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(new Header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH))
                 .body(request)
-                .patch("/api/me/{memberId}", savedMember.getId())
+                .patch("/api/me")
                 .then().log().all()
                 .extract();
 
@@ -158,14 +249,14 @@ class MemberControllerTest {
     @Test
     void shouldFailToUpdateNonExistMember() {
         // given
-        long nonExistMemberId = -1;
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header("authorization", MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH)
                 .body(request)
-                .patch("/api/me/{memberId}", nonExistMemberId)
+                .patch("/api/me")
                 .then().log().all()
                 .extract();
 
@@ -173,7 +264,7 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
             softly.assertThat(response.body().asString()).isEqualTo(String.format(
-                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
             ));
         });
     }
@@ -181,12 +272,13 @@ class MemberControllerTest {
     @Test
     void deleteMember() {
         // given
-        Member savedMember = builder.buildMember(MemberFixtures.member1());
+        Member member1 = builder.buildMember(MemberFixtures.member1());
 
         // when
         ExtractableResponse<Response> response =
                 RestAssured.given().log().all()
-                        .delete("/api/me/{memberId}", savedMember.getId())
+                        .header(new Header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH))
+                        .delete("/api/me")
                         .then().log().all()
                         .extract();
 
@@ -203,7 +295,8 @@ class MemberControllerTest {
 
         // when
         ExtractableResponse response = RestAssured.given().log().all()
-                .delete("/api/me/{memberId}", nonExistMemberId)
+                .header("authorization", MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH)
+                .delete("/api/me")
                 .then().log().all()
                 .extract();
 
@@ -211,7 +304,7 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
             softly.assertThat(response.body().asString()).isEqualTo(String.format(
-                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
             ));
         });
     }
@@ -230,7 +323,8 @@ class MemberControllerTest {
         // when
         ExtractableResponse response =
                 RestAssured.given().log().all()
-                        .get("/api/me/team-places/{memberId}", member.getId())
+                        .header(new Header("authorization", MemberFixtures.MEMBER1_BASIC_AUTH))
+                        .get("/api/me/team-places")
                         .then().log().all()
                         .extract();
 
@@ -244,12 +338,10 @@ class MemberControllerTest {
 
     @Test
     void shouldFailToFindTeamPlacesOfNonExistMember() {
-        // given
-        long nonExistMemberId = -1;
-
-        // when
+        // given & when
         ExtractableResponse response = RestAssured.given().log().all()
-                .get("/api/me/team-places/{memberId}", nonExistMemberId)
+                .header("authorization", MemberFixtures.NON_EXIST_MEMBER_BASIC_AUTH)
+                .get("/api/me/team-places")
                 .then().log().all()
                 .extract();
 
@@ -257,7 +349,7 @@ class MemberControllerTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(response.statusCode()).isEqualTo(HttpStatus.NOT_FOUND.value());
             softly.assertThat(response.body().asString()).isEqualTo(String.format(
-                    "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                    "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
             ));
         });
     }

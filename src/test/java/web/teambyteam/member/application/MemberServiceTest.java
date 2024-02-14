@@ -3,6 +3,8 @@ package web.teambyteam.member.application;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import web.teambyteam.fixtures.FixtureBuilder;
 import web.teambyteam.fixtures.MemberFixtures;
 import web.teambyteam.fixtures.TeamPlaceFixtures;
+import web.teambyteam.global.AuthMember;
 import web.teambyteam.member.application.dto.MyInfoResponse;
 import web.teambyteam.member.application.dto.MyInfoUpdateRequest;
 import web.teambyteam.member.application.dto.ParticipatingTeamResponse;
@@ -41,7 +44,7 @@ class MemberServiceTest {
     void signUp() {
 
         // given
-        SignUpRequest request = new SignUpRequest("roy", "roy@gmail.com", "image");
+        SignUpRequest request = new SignUpRequest("roy", "roy@gmail.com", "1234", "image");
 
         // when
         Long memberId = memberService.signUp(request);
@@ -58,13 +61,34 @@ class MemberServiceTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "12345678()", "abcdefgh[]", "가나다라{}", "가나다라_-+",
+            "12345678|", "abcdefgh'", "가나다라\"", "가나다라\\",
+            "12345678<>", "abcdefgh?", "가나다라/", "가나다라.",
+    })
+    void singUp_withInvalidPassword_shouldFail(String wrongPassword) {
+        // given
+        SignUpRequest request = new SignUpRequest(
+                "roy",
+                "roy@gmail.com",
+                wrongPassword,
+                "image");
+        // when & then
+        Assertions.assertThatThrownBy(() -> memberService.signUp(request))
+                .isInstanceOf(MemberException.InvalidPasswordException.class)
+                .hasMessage(String.format(
+                        "비밀번호는 최소 1자, 최대 16자로 구성된 문자, 숫자, 특수 기호만 사용할 수 있습니다."
+                ));
+    }
+
     @Test
     void signUp_withDuplicateEmail_shouldFail() {
         // given
         Member member = builder.buildMember(MemberFixtures.member1());
 
         String duplicateEmail = "roy@gmail.com";
-        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "url");
+        SignUpRequest request = new SignUpRequest("name", duplicateEmail, "1234", "url");
 
         // when & then
         Assertions.assertThatThrownBy(() ->
@@ -82,7 +106,7 @@ class MemberServiceTest {
         Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
-        MyInfoResponse response = memberService.getMyInfo(savedMember.getId());
+        MyInfoResponse response = memberService.getMyInfo(MemberFixtures.member1Request());
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -98,14 +122,14 @@ class MemberServiceTest {
     @Test
     void getNonExistMember_shouldFail() {
         // given
-        long nonExistMemberId = -1;
+        String nonExistMemberEmail = "nonExistEmail@gmail.com";
 
         // when & then
         Assertions.assertThatThrownBy(() ->
-                        memberService.getMyInfo(nonExistMemberId))
+                        memberService.getMyInfo(MemberFixtures.nonExistMemberRequest()))
                 .isInstanceOf(MemberException.NotFoundException.class)
                 .hasMessage(String.format(
-                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
                 ));
     }
 
@@ -116,9 +140,9 @@ class MemberServiceTest {
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("koy");
 
         // when
-        memberService.updateMyInfo(savedMember.getId(), request);
+        memberService.updateMyInfo(new AuthMember(savedMember.getEmail().getValue()), request);
 
-        MyInfoResponse myInfo = memberService.getMyInfo(savedMember.getId());
+        MyInfoResponse myInfo = memberService.getMyInfo(new AuthMember(savedMember.getEmail().getValue()));
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -129,25 +153,24 @@ class MemberServiceTest {
     @Test
     void updateNonExistMember_shouldFail() {
         // given
-        long nonExistMemberId = -1;
         MyInfoUpdateRequest request = new MyInfoUpdateRequest("doy");
 
         // when & then
         Assertions.assertThatThrownBy(() ->
-                        memberService.updateMyInfo(nonExistMemberId, request))
+                        memberService.updateMyInfo(MemberFixtures.nonExistMemberRequest(), request))
                 .isInstanceOf(MemberException.NotFoundException.class)
                 .hasMessage(String.format(
-                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
                 ));
     }
 
     @Test
     void deleteMember() {
         // given
-        Member savedMember = memberRepository.save(new Member("roy", "roy@gmail.com", "image"));
+        Member savedMember = builder.buildMember(MemberFixtures.member1());
 
         // when
-        memberService.cancelMembership(savedMember.getId());
+        memberService.cancelMembership(MemberFixtures.member1Request());
 
         // then
 
@@ -159,15 +182,12 @@ class MemberServiceTest {
 
     @Test
     void deleteNonExistMember_showFail() {
-        // given
-        long nonExistMemberId = -1;
-
-        // when & then
+        // given & when & then
         Assertions.assertThatThrownBy(() ->
-                        memberService.cancelMembership(nonExistMemberId))
+                        memberService.cancelMembership(MemberFixtures.nonExistMemberRequest()))
                 .isInstanceOf(MemberException.NotFoundException.class)
                 .hasMessage(String.format(
-                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
                 ));
     }
 
@@ -186,7 +206,7 @@ class MemberServiceTest {
                 new ParticipatingTeamResponse(memberTeamPlace2.getTeamPlace().getId(), memberTeamPlace2.getTeamPlace().getName())));
 
         // when
-        ParticipatingTeamsResponse response = memberService.findParticipatingTeams(memberTeamPlace2.getMember().getId());
+        ParticipatingTeamsResponse response = memberService.findParticipatingTeams(MemberFixtures.member1Request());
 
         // then
         SoftAssertions.assertSoftly(softly -> {
@@ -196,15 +216,12 @@ class MemberServiceTest {
 
     @Test
     void findTeams_ofNonExistMember_shouldFail() {
-        // given
-        long nonExistMemberId = -1;
-
-        // when & then
+        // given & when & then
         Assertions.assertThatThrownBy(() ->
-                        memberService.findParticipatingTeams(nonExistMemberId))
+                        memberService.findParticipatingTeams(MemberFixtures.nonExistMemberRequest()))
                 .isInstanceOf(MemberException.NotFoundException.class)
                 .hasMessage(String.format(
-                        "해당 멤버가 존재하지 않습니다. - request info { member_id : %d}", nonExistMemberId
+                        "해당 멤버가 존재하지 않습니다. - request info { member_email : %s}", MemberFixtures.NON_EXIST_MEMBER_EMAIL
                 ));
     }
 
